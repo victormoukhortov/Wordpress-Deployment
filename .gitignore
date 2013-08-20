@@ -1,0 +1,4 @@
+.db-backup/
+.DS_Store
+local-config.php
+*.pyc
