@@ -1,14 +1,8 @@
 #!/user/bin/env/python
 
-git = {
-    "url" : "",
-    "user" : "",
-    "password" : "",
-}
+git_url = ""
 
-table_prefix = "wp_"
-
-dev = {
+local = {
     'wordpress' : {
         "DB_NAME" : "",
         "DB_USER" : "",
@@ -19,7 +13,7 @@ dev = {
         "table_prefix" : "wp_"
     },
     "directory" : "",
-    "hosts" : [""]
+    "hosts" : ""
 }
 
 staging = {
@@ -33,7 +27,7 @@ staging = {
         "table_prefix" : "wp_"
     },
     "directory" : "",
-    "hosts" : [""]
+    "host" : ""
 }
 
 production = {
@@ -47,8 +41,8 @@ production = {
         "table_prefix" : "wp_"
     },
     "directory" : "",
-    "hosts" : [""]
+    "host" : ""
 }
-    
+
 backup_count = 3
 backup_directory = '.db-backup'
