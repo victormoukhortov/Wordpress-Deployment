@@ -42,18 +42,24 @@ def setup():
     with cd(env.target['directory']):
         run('git clone --recursive %s .' % config.git_url)
         run('mkdir %s' % config.backup_directory)
+
 @task
 def deploy(branch='master', tag=None, commit=None):
-    """Update target repository"""
+    """Update target deployment. Arguments are mutually exclusive. Precedence is commit > tag > branch.
+
+    Keyword arguments:
+    branch -- The branch to deploy
+    tag -- The tag to deploy
+    commit -- The commit hash to deploy"""
     with cd(env.target['directory']):
         run('git reset --hard HEAD')
-        if not tag:
-            if commit:
-                run('git checkout %s' % commit)
+        if not commit:
+            if tag:
+                run('git checkout tag/%s' % tag)
             else:
                 run('git checkout %s' % branch)
         else:
-            run('git checkout tag/%s' % tag)
+            run('git checkout %s' % commit)
         for key, value in env.target['wordpressConfig'].items():
             sed('wp-config.php', '%%%%%s%%%%' % key, value)
             
@@ -65,44 +71,21 @@ def db_clone(source="staging"):
     source -- The source to clone from (local, staging or production)"""
     execute(db_backup)
     source = getattr(config, source)
-    if source == config.local:
-        with lcd(source['directory']):
-            local_tmp = lrun('mktemp', capture=True)
-            remote_filename = 'db-upload.sql'
-            lrun('mysqldump --add-drop-table -h %s -u %s -p%s %s > %s' %
-                (source['wordpressConfig']['DB_HOST'],
-                 source['wordpressConfig']['DB_USER'],
-                 source['wordpressConfig']['DB_PASSWORD'],
-             env.target['wordpressConfig']['DB_NAME'],
-                 local_tmp))
-            lrun('scp %s %s:%s/%s' %
-                (local_tmp, 
-                 env.target['host'],
-                 env.target['directory'],
-                 remote_filename))
-            lrun("rm %s" % local_tmp)
-        with cd(env.target['directory']):
-            run('mysql -u %s -p%s %s < %s' %
-                (env.target['wordpressConfig']['DB_USER'],
-                 env.target['wordpressConfig']['DB_PASSWORD'],
-                 env.target['wordpressConfig']['DB_NAME'],
-                 remote_filename))
-            run('rm %s' % remote_filename)
-    else:
-        run("ssh %s 'mysqldump --add-drop-table -h %s -u %s -p%s %s' | mysql -u %s -p%s %s" %
-            (source['host'],    
-             source['wordpressConfig']['DB_HOST'],
-             source['wordpressConfig']['DB_USER'],
-             source['wordpressConfig']['DB_PASSWORD'] ,
-             source['wordpressConfig']['DB_NAME'],
-             env.target['wordpressConfig']['DB_USER'],
-             env.target['wordpressConfig']['DB_PASSWORD'],
-             env.target['wordpressConfig']['DB_NAME']))
+    run("mysqldump --add-drop-table -h %s -u %s -p%s %s | ssh -C %s 'mysql -u %s -p%s %s'" %
+        (source['wordpressConfig']['DB_HOST'],
+         source['wordpressConfig']['DB_USER'],
+         source['wordpressConfig']['DB_PASSWORD'] ,
+         source['wordpressConfig']['DB_NAME'],
+         env.target['host'],
+         env.target['wordpressConfig']['DB_USER'],
+         env.target['wordpressConfig']['DB_PASSWORD'],
+         env.target['wordpressConfig']['DB_NAME']))
+
 @task
 def db_backup():
     """Backup the database on the target host"""
     with cd('%s/%s' % (env.target['directory'], config.backup_directory)):
-        run('mysqldump --add-drop-table -h %s -u %s -p%s %s | gzip -9 > %s.gz' %
+        run('mysqldump --add-drop-table -h %s -u %s -p%s %s | gzip -9 > %s.sql.gz' %
             (env.target['wordpressConfig']['DB_HOST'],
              env.target['wordpressConfig']['DB_USER'],
              env.target['wordpressConfig']['DB_PASSWORD'],
