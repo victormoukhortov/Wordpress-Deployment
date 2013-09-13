@@ -3,17 +3,18 @@
 git_url = ""
 
 local = {
-    'wordpress' : {
+    'wordpressConfig' : {
         "DB_NAME" : "",
         "DB_USER" : "",
         "DB_PASSWORD" : "",
         "DB_HOST" : "localhost",
         "DB_CHARSET" : "utf8",
         "DB_COLLATE" : "",
-        "table_prefix" : "wp_"
+        "WP_HOME" : "",
+        "WP_SITEURL" : ""
     },
     "directory" : "",
-    "hosts" : ""
+    "host" : ""
 }
 
 staging = {
@@ -24,7 +25,8 @@ staging = {
         "DB_HOST" : "localhost",
         "DB_CHARSET" : "utf8",
         "DB_COLLATE" : "",
-        "table_prefix" : "wp_"
+        "WP_HOME" : "",
+        "WP_SITEURL" : ""
     },
     "directory" : "",
     "host" : ""
@@ -38,11 +40,13 @@ production = {
         "DB_HOST" : "localhost",
         "DB_CHARSET" : "utf8",
         "DB_COLLATE" : "",
-        "table_prefix" : "wp_"
+        "WP_HOME" : "",
+        "WP_SITEURL" : ""
     },
     "directory" : "",
     "host" : ""
 }
-
+    
 backup_count = 3
 backup_directory = '.db-backup'
+backup_filename = 'auto-backup'
