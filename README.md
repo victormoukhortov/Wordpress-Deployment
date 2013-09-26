@@ -10,6 +10,7 @@ Assumptions
 Getting Started
 --------------------------------
 These instructions assume that you will be deploying to a local server. If you don't want to do this, you can install directly onto staging just as well. You will still need to fill in `local_config.py` if you want to synchronize your database to/from local.
+
 1. Clone [Wordpress Skeleton](https://github.com/victormoukhortov/WordPress-Skeleton) into your working directory. Be sure to use the `--recursive` flag to grab Wordpress as well.
 2. Reset origin to your own git server: `git remote set-url origin your-git-url-here.git` (should be a bare git repository).
 3. Copy `fabfile.py`, `config.py` and `local_config.py` from this repository to your working directory
