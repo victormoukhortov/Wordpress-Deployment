@@ -36,7 +36,7 @@ Deploys the given branch/tag/commit to the target host. Performs search and repl
 
     db_copy:[local|staging|production]
 
-Executes `db_backup` then copies the database from the given host to the target host. Performs database queries to update environment-specific Wordpress configuration. Redeploys in-place afterwards.
+Executes `db_backup` then copies the database from the given host to the target host. Executes `mysql_update` and `deploy` in-place afterwards.
 
     db_backup:[<filename>]
 
@@ -44,11 +44,15 @@ Performs database backup on the target host. Executes `tidy_backups` afterwards.
 
     tidy_backups
 
-Removes files starting with `config.backup_filename` over the limit set in `config.backup_count` on the target host.
+Removes files starting with `config.backup_filename` over the limit set in `config.backup_count` on the target host. You won't usually need to run this explicitly.
 
     db_restore
     
 Restore most recent auto-generated backup. This command will overwrite the current database.
+
+    db_update
+
+Updates environment-specific Wordpress settings in the database on the target host. Run this to propagate changes to your configuration files into the database.
 
 Examples
 --------------------------------

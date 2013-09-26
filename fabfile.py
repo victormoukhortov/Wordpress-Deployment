@@ -44,7 +44,7 @@ def setup():
     """Checkout repository and create mysql database on target."""
     if not exists(env.target['directory']):
         run('mkdir %s' % env.target['directory'])
-    with cd(env.target['directory']):
+    with cd(env.target['directory']), hide('running'):
         run('git clone --recursive %s .' % config.git_url)
         run('mkdir %s' % config.backup_directory)
     run('mysql -h %s -u %s -p%s -e "CREATE DATABASE IF NOT EXISTS %s"' %
@@ -70,7 +70,7 @@ def deploy(branch=None, tag=None, commit=None, submodules='no'):
     if not exists(env.target['directory']):
         abort("Target directory does not exist. Run 'fab %s setup' first" % env.target['wordpressConfig']['WP_STAGE'])
     if tag or branch or commit:
-        with cd(env.target['directory']), quiet():
+        with cd(env.target['directory']), hide('running'):
             log_level = '--verbose' if output.debug else '--quiet'
             git_fetch = 'git fetch --all %s' % log_level
             git_fetch_tags = 'git fetch --all --tags %s' % log_level
@@ -81,26 +81,22 @@ def deploy(branch=None, tag=None, commit=None, submodules='no'):
                     run('git checkout --force %s' % tag)
                 elif branch:
                     run('git checkout --force %s' % branch)
+                    run('git merge --ff-only origin/%s' % branch)
             else:
                 run('git checkout --force %s' % commit)
             if submodules == 'yes':
                 run('git submodule foreach %s; %s' %
                     (git_fetch,
                      git_fetch_tags))
-                run('git submodule update --recursive')
+                run('git submodule update --force --recursive')
     with cd(env.target['directory']), quiet():
         for key, value in env.target['wordpressConfig'].items():
-                sed('wp-config.php', '%%%%%s%%%%' % key, value, backup='')
+            sed('wp-config.php', '%%%%%s%%%%' % key, value, backup='')
 
 @task
-def db_copy(source):
-    """Copy the database from the given source to the target
-
-    Arguments:
-    source -- The source to copy from (local, staging or production)"""
-    execute(db_backup)
-    source = getattr(config, source)
-    mysql_update = "UPDATE wp_options \
+def db_update():
+    """Update Wordpress-specific settings in the database."""
+    update_statement = "UPDATE wp_options \
         SET option_value = '%s' \
         WHERE option_name = 'home';\
         UPDATE wp_options \
@@ -113,6 +109,22 @@ def db_copy(source):
             env.target['wordpressConfig']['WP_HOME'],
             env.target['wordpressConfig']['WP_SITEURL'],
             env.target['directory'])
+    with quiet():
+        run('mysql -h %s -u %s -p%s -e "%s" %s' %
+            (env.target['wordpressConfig']['DB_HOST'],
+             env.target['wordpressConfig']['DB_USER'],
+             env.target['wordpressConfig']['DB_PASSWORD'],
+             update_statement,
+             env.target['wordpressConfig']['DB_NAME']))
+
+@task
+def db_copy(source):
+    """Copy the database from the given source to the target
+
+    Arguments:
+    source -- The source to copy from (local, staging or production)"""
+    execute(db_backup)
+    source = getattr(config, source)
     mysqldump = 'mysqldump --add-drop-table -h %s -u %s -p%s %s' % (
         source['wordpressConfig']['DB_HOST'],
         source['wordpressConfig']['DB_USER'],
@@ -134,12 +146,7 @@ def db_copy(source):
                 (source['host'],
                  mysqldump,
                  mysql_login))
-        run('mysql -h %s -u %s -p%s -e "%s" %s' %
-            (env.target['wordpressConfig']['DB_HOST'],
-             env.target['wordpressConfig']['DB_USER'],
-             env.target['wordpressConfig']['DB_PASSWORD'],
-             mysql_update,
-             env.target['wordpressConfig']['DB_NAME']))
+    execute(db_update)
     execute(deploy)
             
 @task
