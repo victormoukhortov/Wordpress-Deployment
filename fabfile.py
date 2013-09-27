@@ -40,6 +40,14 @@ def production():
     set_target('production')
 
 @task
+def db_create():
+    run('mysql -h %s -u %s -p%s -e "CREATE DATABASE IF NOT EXISTS %s"' %
+        (env.target['wordpressConfig']['DB_HOST'],
+         env.target['wordpressConfig']['DB_USER'],
+         env.target['wordpressConfig']['DB_PASSWORD'],
+         env.target['wordpressConfig']['DB_NAME']))
+
+@task
 def setup():
     """Checkout repository and create mysql database on target."""
     if not exists(env.target['directory']):
@@ -47,11 +55,7 @@ def setup():
     with cd(env.target['directory']), hide('running'):
         run('git clone --recursive %s .' % config.git_url)
         run('mkdir %s' % config.backup_directory)
-    run('mysql -h %s -u %s -p%s -e "CREATE DATABASE IF NOT EXISTS %s"' %
-        (env.target['wordpressConfig']['DB_HOST'],
-         env.target['wordpressConfig']['DB_USER'],
-         env.target['wordpressConfig']['DB_PASSWORD'],
-         env.target['wordpressConfig']['DB_NAME']))
+    execute(db_create)
 
 @task
 def deploy(branch=None, tag=None, commit=None, submodules='no'):
