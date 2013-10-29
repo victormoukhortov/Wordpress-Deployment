@@ -94,6 +94,7 @@ def deploy(branch=None, tag=None, commit=None, submodules='no'):
                      git_fetch_tags))
                 run('git submodule update --force --recursive')
     with cd(env.target['directory']), quiet():
+        run('git reset --hard HEAD')
         for key, value in env.target['wordpressConfig'].items():
             sed('wp-config.php', '%%%%%s%%%%' % key, value, backup='')
 
