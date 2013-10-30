@@ -52,6 +52,8 @@ def setup():
     """Checkout repository and create mysql database on target."""
     if not exists(env.target['directory']):
         run('mkdir %s' % env.target['directory'])
+    if not exists(env.target['sharedDirectory']):
+        run('mkdir %s' % env.target['sharedDirectory'])
     with cd(env.target['directory']), hide('running'):
         run('git clone --recursive %s .' % config.git_url)
         run('mkdir %s' % config.backup_directory)
@@ -97,6 +99,7 @@ def deploy(branch=None, tag=None, commit=None, submodules='no'):
         run('git reset --hard HEAD')
         for key, value in env.target['wordpressConfig'].items():
             sed('wp-config.php', '%%%%%s%%%%' % key, value, backup='')
+        run('if [ ! -h %s/shared ]; then ln -s %s %s/shared; fi' % (target['directory'], target['sharedDirectory'], target['directory']))
 
 @task
 def db_update():

@@ -21,6 +21,8 @@ staging = {
     },
     # Absolute path to install directory - eg. /var/www/html/myproject
     "directory" : "",
+    # Absolute path to wordpress shared directory - eg. /var/www/html/wordpress-shared
+    "sharedDirectory" : "",
     # SSH user and host - eg. me@myproject.com
     "host" : ""
 }
@@ -43,6 +45,8 @@ production = {
     },
     # Absolute path to install directory - eg. /var/www/html/myproject
     "directory" : "",
+    # Absolute path to wordpress shared directory - eg. /var/www/html/wordpress-shared
+    "sharedDirectory" : "",
     # SSH user and host - eg. me@myproject.com
     "host" : ""
 }
