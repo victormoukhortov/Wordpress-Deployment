@@ -99,7 +99,7 @@ def deploy(branch=None, tag=None, commit=None, submodules='no'):
         run('git reset --hard HEAD')
         for key, value in env.target['wordpressConfig'].items():
             sed('wp-config.php', '%%%%%s%%%%' % key, value, backup='')
-        run('if [ ! -h %s/shared ]; then ln -s %s %s/shared; fi' % (target['directory'], target['sharedDirectory'], target['directory']))
+        run('if [ ! -h %s/shared ]; then ln -s %s %s/shared; fi' % (env.target['directory'], env.target['sharedDirectory'], env.target['directory']))
 
 @task
 def db_update():
