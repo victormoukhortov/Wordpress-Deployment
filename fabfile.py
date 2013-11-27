@@ -94,7 +94,7 @@ def deploy(branch=None, tag=None, commit=None, submodules='no'):
                 run('git submodule foreach %s; %s' %
                     (git_fetch,
                      git_fetch_tags))
-                run('git submodule update --force --recursive')
+                run('git submodule update --init --force --recursive')
     with cd(env.target['directory']), quiet():
         run('git reset --hard HEAD')
         for key, value in env.target['wordpressConfig'].items():

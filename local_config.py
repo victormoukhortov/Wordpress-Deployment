@@ -10,9 +10,9 @@ local = {
         # Wordpress database host
         "DB_HOST" : "localhost",
         # URL to Wordpress installation - eg. http://localhost/myproject/wp
-        "WP_HOME" : "",
-        # URL to blog home page - eg. http://localhost/myproject
         "WP_SITEURL" : "",
+        # URL to home page - eg. http://localhost/myproject
+        "WP_HOME" : ""
     },
     # Absolute path to install directory - eg. /var/www/html/myproject
     "directory" : "",

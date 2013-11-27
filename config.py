@@ -14,10 +14,10 @@ staging = {
         "DB_PASSWORD" : "",
         # Wordpress database host
         "DB_HOST" : "localhost",
-        # URL to Wordpress installation - eg. http://myproject.com/blog/wp
-        "WP_HOME" : "",
-        # URL to blog home page - eg. http://myproject.com/blog
+        # URL to Wordpress installation - eg. http://myproject.com/wp
         "WP_SITEURL" : "",
+        # URL to home page - eg. http://myproject.com
+        "WP_HOME" : ""
     },
     # Absolute path to install directory - eg. /var/www/html/myproject
     "directory" : "",
@@ -38,10 +38,10 @@ production = {
         "DB_PASSWORD" : "",
         # Wordpress database host
         "DB_HOST" : "localhost",
-        # URL to Wordpress installation - eg. http://myproject.com/blog/wp
-        "WP_HOME" : "",
-        # URL to blog home page - eg. http://myproject.com/blog
+        # URL to Wordpress installation - eg. http://myproject.com/wp
         "WP_SITEURL" : "",
+        # URL to home page - eg. http://myproject.com
+        "WP_HOME" : ""
     },
     # Absolute path to install directory - eg. /var/www/html/myproject
     "directory" : "",
