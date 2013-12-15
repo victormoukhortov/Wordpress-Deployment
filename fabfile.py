@@ -102,21 +102,43 @@ def deploy(branch=None, tag=None, commit=None, submodules='no'):
         run('if [ ! -h %s/shared ]; then ln -s %s %s/shared; fi' % (env.target['directory'], env.target['sharedDirectory'], env.target['directory']))
 
 @task
-def db_update():
-    """Update Wordpress-specific settings in the database."""
-    update_statement = "UPDATE wp_options \
-        SET option_value = '%s' \
-        WHERE option_name = 'home';\
-        UPDATE wp_options \
-        SET option_value = '%s' \
-        WHERE option_name = 'siteurl';\
+def db_update(old_url, new_url = None, directory = None):
+    """Update Wordpress-specific settings in the database.
+        
+    Arguments:
+        old_url - 
+        new_url - 
+        directory - """
+    if new_url is None:
+        new_url = env.target['wordpressConfig']['WP_HOME']
+    if directory is None:
+        directory = env.target['directory']
+    update_statement = "UPDATE wp_options\
+        SET option_value = replace(option_value, '%s', '%s')\
+        WHERE option_name = 'home' OR option_name = 'siteurl';\
+        \
+        UPDATE wp_posts\
+        SET guid = replace(guid, '%s','%s');\
+        \
+        UPDATE wp_posts\
+        SET post_content = replace(post_content, '%s', '%s');\
+        \
+        UPDATE wp_postmeta\
+        SET meta_value = replace(meta_value,'%s','%s');\
+        \
         UPDATE wp_options \
         SET option_value = '%s/wp/wp-content/themes/' \
         WHERE option_name = 'template_root' \
         OR option_name = 'stylesheet_root';" % (
-            env.target['wordpressConfig']['WP_HOME'],
-            env.target['wordpressConfig']['WP_SITEURL'],
-            env.target['directory'])
+            old_url,
+            new_url,
+            old_url,
+            new_url,
+            old_url,
+            new_url,
+            old_url,
+            new_url,
+            directory)
     with quiet():
         run('mysql -h %s -u %s -p%s -e "%s" %s' %
             (env.target['wordpressConfig']['DB_HOST'],
@@ -154,7 +176,7 @@ def db_copy(source):
                 (source['host'],
                  mysqldump,
                  mysql_login))
-    execute(db_update)
+    execute(db_update, old_url=source['wordpressConfig']['WP_HOME'])
     execute(deploy)
             
 @task
