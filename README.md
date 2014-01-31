@@ -14,12 +14,13 @@ These instructions assume that you will be deploying to a local server. If you d
 1. Clone [Wordpress Skeleton](https://github.com/victormoukhortov/WordPress-Skeleton) into your working directory. Be sure to use the `--recursive` flag to grab Wordpress as well.
 2. Reset origin to your own git server: `git remote set-url origin your-git-url-here.git` (should be a bare git repository).
 3. Copy `.gitignore`, `fabfile.py`, `config.py` and `local_config_sample.py` from this repository to your working directory
-4. Enter your data into `config.py` and `local_config_sample.py`
-5. Rename `local_config_sample.py` to `local_config.py`
-6. Commit and push your changes
-7. Run `fab local setup`, then `fab local deploy` (If you are working with a symlink, just run `fab local db_create`)
-8. Navigate to `http://localhost/your-wordpress-directory/wp/wp-admin/install.php` and install Wordpress.
-9. You can now run `fab staging setup` and `fab staging db_copy:local,options_table=yes` to setup your staging environment.
+4. Install [Search Replace DB CLI 2.2](https://github.com/interconnectit/Search-Replace-DB/tree/2.2.0) somewhere _outside of your web root_ on target environments (such as `~/.srdb`).
+5. Enter your data into `config.py` and `local_config_sample.py`
+6. Rename `local_config_sample.py` to `local_config.py`
+7. Commit and push your changes
+8. Run `fab local setup`, then `fab local deploy` (If you are working with a symlink, just run `fab local db_create`)
+9. Navigate to `http://localhost/your-wordpress-directory/wp/wp-admin/install.php` and install Wordpress.
+10. You can now run `fab staging setup` and `fab staging db_copy:local,options_table=yes` to setup your staging environment.
 
 ### Symlinks
 
@@ -39,11 +40,11 @@ Prepares the target host for a Wordpress deployment. Clones the repository and c
 
 Creates the database on the target host if it does not exist. Used by `setup`.
 
-    deploy:[<branch>|branch=<branch>|tag=<tag>|<commit=<hash>],[submodules=no|yes]
+    deploy:[<branch>|branch=<branch>|tag=<tag>|<commit=<hash>][,submodules=no|yes]
 
-Deploys the given branch/tag/commit to the target host. Performs search and replace on `wp-config.php`. If the submodules argument is given, updates submodules as well (default is `no` for performance). **Please note that this command uses `git reset --hard HEAD` and will remove and changes in the working directory**.
+Deploys the given branch/tag/commit to the target host. Performs search and replace on `wp-config.php`. If the submodules argument is given, updates submodules as well (default is `no` for performance). **Please note that this command uses `git reset --hard HEAD` and will destroy changes in the working directory**.
 
-    db_copy:[local|staging|production],[options_table=no|yes]
+    db_copy:[local|staging|production][,options_table=no|yes]
 
 Executes `db_backup` then copies the database from the given host to the target host. Executes `db_update` and `deploy` in-place afterwards. If `options_table=yes` is given, will copy the `wp_options` table as well. **Please note that copying the options table may lead to theme corruption**.
 
