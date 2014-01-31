@@ -5,7 +5,7 @@ git_url = ""
 
 # Staging server configuration
 staging = {
-    'wordpressConfig' : {
+    "wordpressConfig" : {
         # Wordpress databaes name
         "DB_NAME" : "",
         # Wordpress database user
@@ -24,12 +24,14 @@ staging = {
     # Absolute path to wordpress shared directory - eg. /var/www/html/wordpress-shared
     "sharedDirectory" : "",
     # SSH user and host - eg. me@myproject.com
-    "host" : ""
+    "host" : "",
+    # Path to SRDB 2.2.0 installation (should be outside of web root) - eg. ~/.srdb/searchreplacedbcli.php
+    "srdbCli" : ""
 }
 
 # Production server configuration
 production = {
-    'wordpressConfig' : {
+    "wordpressConfig" : {
         # Wordpress databaes name
         "DB_NAME" : "",
         # Wordpress database user
@@ -48,12 +50,14 @@ production = {
     # Absolute path to wordpress shared directory - eg. /var/www/html/wordpress-shared
     "sharedDirectory" : "",
     # SSH user and host - eg. me@myproject.com
-    "host" : ""
+    "host" : "",
+    # Path to SRDB 2.2.0 installation (should be outside of web root) - eg. ~/.srdb/searchreplacedbcli.php
+    "srdbCli" : ""
 }
 
 # Number of auto-backups to maintain
 backup_count = 3
 # Directory to store the backups in (relative to project directory)
-backup_directory = 'db-backup'
+backup_directory = "db-backup"
 # Filename to prepent to automatically-generated backups.
-backup_filename = 'auto-backup'
+backup_filename = "auto-backup"

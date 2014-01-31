@@ -7,7 +7,7 @@ from fabric.context_managers import cd, lcd
 from fabric.operations import local as lrun
 from fabric.contrib.files import exists, sed
 from fabric.state import output
-from fabric.utils import abort
+from fabric.utils import abort, puts
 
 import config
 from local_config import local
@@ -73,13 +73,16 @@ def deploy(branch=None, tag=None, commit=None, submodules='no'):
         commit -- The commit hash to deploy (default None)
         submodules -- If True, redeploy all submodules, otherwise ignore them. (default False)
         quiet -- If True, show verbose output, otherwise be quiet. (default True)"""
+    if env.target['deploy'] != True:
+        puts("Value %s.deploy not set. Aborting." % env.target['wordpressConfig']['WP_STAGE'])
+        return
     if not exists(env.target['directory']):
-        abort("Target directory does not exist. Run 'fab %s setup' first" % env.target['wordpressConfig']['WP_STAGE'])
+        abort("Target directory does not exist. Run 'fab %s setup' first." % env.target['wordpressConfig']['WP_STAGE'])
     if tag or branch or commit:
-        with cd(env.target['directory']), hide('running'):
+        with cd(env.target['directory']), quiet():
             log_level = '--verbose' if output.debug else '--quiet'
             git_fetch = 'git fetch --all %s' % log_level
-            git_fetch_tags = 'git fetch --all --tags %s' % log_level
+            git_fetch_tags = 'git fetch --tags %s' % log_level
             run(git_fetch)
             if not commit:
                 if tag:
@@ -91,9 +94,10 @@ def deploy(branch=None, tag=None, commit=None, submodules='no'):
             else:
                 run('git checkout --force %s' % commit)
             if submodules == 'yes':
-                run('git submodule foreach %s; %s' %
-                    (git_fetch,
-                     git_fetch_tags))
+                run('git submodule%s foreach %s; %s' %
+                    ('' if output.debug else ' --quiet',
+                     git_fetch_tags,
+                     git_fetch))
                 run('git submodule update --init --force --recursive')
     with cd(env.target['directory']), quiet():
         run('git reset --hard HEAD')
@@ -102,64 +106,52 @@ def deploy(branch=None, tag=None, commit=None, submodules='no'):
         run('if [ ! -h %s/shared ]; then ln -s %s %s/shared; fi' % (env.target['directory'], env.target['sharedDirectory'], env.target['directory']))
 
 @task
-def db_update(old_url, new_url = None, directory = None):
+def db_update(source):
     """Update Wordpress-specific settings in the database.
+    
+    Uses Search Replace DB CLI to replace serialized values in the database.
         
     Arguments:
-        old_url - 
-        new_url - 
-        directory - """
-    if new_url is None:
-        new_url = env.target['wordpressConfig']['WP_HOME']
-    if directory is None:
-        directory = env.target['directory']
-    update_statement = "UPDATE wp_options\
-        SET option_value = replace(option_value, '%s', '%s')\
-        WHERE option_name = 'home' OR option_name = 'siteurl';\
-        \
-        UPDATE wp_posts\
-        SET guid = replace(guid, '%s','%s');\
-        \
-        UPDATE wp_posts\
-        SET post_content = replace(post_content, '%s', '%s');\
-        \
-        UPDATE wp_postmeta\
-        SET meta_value = replace(meta_value,'%s','%s');\
-        \
-        UPDATE wp_options \
-        SET option_value = '%s/wp/wp-content/themes/' \
-        WHERE option_name = 'template_root' \
-        OR option_name = 'stylesheet_root';" % (
-            old_url,
-            new_url,
-            old_url,
-            new_url,
-            old_url,
-            new_url,
-            old_url,
-            new_url,
-            directory)
+        source -- The source to replace settings from (local, staging or production)"""
+    source = getattr(config, source)
+    if not exists(env.target['srdbCli']):
+        abort("Search Replace DB CLI does not exist at %s. Please install Search Replace DB on your target machine" % env.target['srdbCli'])
+    cli_command = '%s -h%s -d%s -u%s -p%s' % (
+        env.target['srdbCli'],
+        env.target['wordpressConfig']['DB_HOST'],
+        env.target['wordpressConfig']['DB_NAME'],
+        env.target['wordpressConfig']['DB_USER'],
+        env.target['wordpressConfig']['DB_PASSWORD'])
     with quiet():
-        run('mysql -h %s -u %s -p%s -e "%s" %s' %
-            (env.target['wordpressConfig']['DB_HOST'],
-             env.target['wordpressConfig']['DB_USER'],
-             env.target['wordpressConfig']['DB_PASSWORD'],
-             update_statement,
-             env.target['wordpressConfig']['DB_NAME']))
+        run('%s -s%s -r%s' %
+            (cli_command,
+             source['wordpressConfig']['WP_HOME'],
+             env.target['wordpressConfig']['WP_HOME']))
+        run('%s -s%s -r%s' %
+            (cli_command,
+             source['directory'],
+             env.target['directory']))
 
 @task
-def db_copy(source):
+def db_copy(source, options_table='no'):
     """Copy the database from the given source to the target
 
     Arguments:
-    source -- The source to copy from (local, staging or production)"""
+    source -- The source to copy from (local, staging or production)
+    options_table -- Whether to copt the wp_options table (default 'no')"""
     execute(db_backup)
+    db_clone(source, options_table)
+    execute(db_update, source=source)
+    execute(deploy)
+
+def db_clone(source, options_table):
     source = getattr(config, source)
-    mysqldump = 'mysqldump --add-drop-table -h %s -u %s -p%s %s' % (
+    mysqldump = 'mysqldump --add-drop-table -h %s -u %s -p%s %s%s' % (
         source['wordpressConfig']['DB_HOST'],
         source['wordpressConfig']['DB_USER'],
         source['wordpressConfig']['DB_PASSWORD'] ,
-        source['wordpressConfig']['DB_NAME'])
+        source['wordpressConfig']['DB_NAME'],
+        ' --ignore-table=%s.wp_options' % source['wordpressConfig']['DB_NAME'] if options_table is 'no' else '')
     mysql_login = 'mysql -h %s -u %s -p%s %s' % (
         env.target['wordpressConfig']['DB_HOST'],
         env.target['wordpressConfig']['DB_USER'],
@@ -176,9 +168,7 @@ def db_copy(source):
                 (source['host'],
                  mysqldump,
                  mysql_login))
-    execute(db_update, old_url=source['wordpressConfig']['WP_HOME'])
-    execute(deploy)
-            
+
 @task
 def db_backup(filename = str('%s-%s' % (config.backup_filename, datetime.datetime.now())).replace(' ', '-')):
     """Backup the database on the target host.

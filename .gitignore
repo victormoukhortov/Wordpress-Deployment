@@ -1,4 +1,8 @@
-.db-backup/
+/shared
+/local-config.php
+/local_config.py
+/db-backup
+/content/upgrade/
 .DS_Store
-local-config.php
+.htaccess
 *.pyc

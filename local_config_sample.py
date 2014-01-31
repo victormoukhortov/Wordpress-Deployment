@@ -1,6 +1,6 @@
 # Local configuration
 local = {
-    'wordpressConfig' : {
+    "wordpressConfig" : {
         # Wordpress databaes name
         "DB_NAME" : "",
         # Wordpress database user
@@ -19,5 +19,9 @@ local = {
     # Absolute path to wordpress shared directory - eg. /var/www/html/wordpress-shared
     "sharedDirectory" : "",
     # SSH user and host - eg. me@localhost
-    "host" : ""
+    "host" : "",
+    # Path to SRDB 2.2.0 installation (should be outside of web root) - eg. ~/.srdb/searchreplacedbcli.php
+    "srdbCli" : "",
+    # Whether to run deployments on this environemnt (Set to False if you are serving your working directory)
+    "deploy" : False
 }
