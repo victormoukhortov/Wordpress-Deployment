@@ -19,7 +19,7 @@ These instructions assume that you will be deploying to a local server. If you d
 6. Rename `local_config_sample.py` to `local_config.py`
 7. Commit and push your changes
 8. Run `fab local setup`, then `fab local deploy` (If you are working with a symlink, just run `fab local db_create`)
-9. Navigate to `http://localhost/your-wordpress-directory/wp/wp-admin/install.php` and install Wordpress.
+9. Navigate to your local Wordpress URL and install the database.
 10. You can now run `fab staging setup` and `fab staging db_copy:local,options_table=yes` to setup your staging environment.
 
 ### Symlinks
