@@ -73,7 +73,7 @@ def deploy(branch=None, tag=None, commit=None, submodules='no'):
         commit -- The commit hash to deploy (default None)
         submodules -- If True, redeploy all submodules, otherwise ignore them. (default False)
         quiet -- If True, show verbose output, otherwise be quiet. (default True)"""
-    if env.target['deploy'] != True:
+    if 'deploy' in env.target.values() and env.target['deploy'] != True:
         puts("Value %s.deploy not set. Aborting." % env.target['wordpressConfig']['WP_STAGE'])
         return
     if not exists(env.target['directory']):
