@@ -1,30 +1,34 @@
 (Another) Wordpress Deployment Strategy
 ================================
-This is a simple command-line deployment tool for Wordpress using Python Fabric. It was built to be lightweight and idiomatic, and to avoid installation on target environments. At the moment it only depends on [Interconnectit's Search Replace DB CLI](https://github.com/interconnectit/Search-Replace-DB/tree/2.2.0) for database copying operations. Otherwise, unlike Capistrano, no external tools need be installed on target environments.
+This is a simple command-line deployment tool for [Wordpress](https://wordpress.org/) using [Python Fabric](http://www.fabfile.org/) (more or less a simple wrapper around SSH and bash). This tool uses ideomatic Fabric and is extremely light-weight. Python is not required to be installed on target environments.
+
+At the moment this tool only depends on [Git](http://git-scm.com/) and [Interconnectit's Search Replace DB CLI](https://github.com/interconnectit/Search-Replace-DB/tree/2.2.0) for database copying operations (optional, only required for the `db_copy` task). Otherwise, unlike Capistrano, you don't have to install anything on your servers.
+
+In conjunction with Git and [WP CLI](http://wp-cli.org/), this tool can be used to easily automate most Wordpress related taskes, including databse migration and pushing plugin updates.
 
 Assumptions
 --------------------------------
-* Using [My Fork](https://github.com/victormoukhortov/WordPress-Skeleton) of Mark Jaquith's Excellent Wordpress-Skeleton ([diff here](https://github.com/markjaquith/WordPress-Skeleton/compare/master...victormoukhortov:master))
+* Using [My Fork](https://github.com/victormoukhortov/WordPress-Skeleton) of Mark Jaquith's excellent Wordpress-Skeleton ([diff here](https://github.com/markjaquith/WordPress-Skeleton/compare/master...victormoukhortov:master))
 * Using git for version control
 
 Getting Started
 --------------------------------
-These instructions assume that you will be deploying to a local server. If you don't want to do this, you can install directly onto staging just as well. You will still need to fill in `local_config.py` if you want to synchronize your database to/from local.
+These instructions assume that you will be deploying to a local server. If you don't want to do this, you can install directly onto staging just as well.
 
-1. Clone [Wordpress Skeleton](https://github.com/victormoukhortov/WordPress-Skeleton) into your working directory. Be sure to use the `--recursive` flag to grab Wordpress as well.
+1. Clone my fork of [Wordpress Skeleton](https://github.com/victormoukhortov/WordPress-Skeleton) into your working directory. Be sure to use the `--recursive` flag to grab Wordpress as well.
 2. Reset origin to your own git server: `git remote set-url origin your-git-url-here.git` (should be a bare git repository).
 3. Copy `.gitignore`, `fabfile.py`, `config.py` and `local_config_sample.py` from this repository to your working directory
-4. Install [Search Replace DB CLI 2.2](https://github.com/interconnectit/Search-Replace-DB/tree/2.2.0) somewhere _outside of your web root_ on target environments (such as `~/.srdb`).
+4. Install [Search Replace DB CLI 2.2](https://github.com/interconnectit/Search-Replace-DB/tree/2.2.0) somewhere _outside of your web root_ on _all_ target environments (such as `~/.srdb`).
 5. Enter your data into `config.py` and `local_config_sample.py`
 6. Rename `local_config_sample.py` to `local_config.py`
-7. Commit and push your changes
-8. Run `fab local setup`, then `fab local deploy` (If you are working with a symlink, just run `fab local db_create`)
+7. Commit and push your changes.
+8. Run `fab local setup`, then `fab local deploy` (If you are working with a symlink, just run `fab local db_create`).
 9. Navigate to your local Wordpress URL and install the database.
 10. You can now run `fab staging setup` and `fab staging db_copy:local,options_table=yes` to setup your staging environment.
 
 ### Symlinks
 
-If your local deployment directory is a symlink to your working directly, please set `local_config.deploy` to `False`. This will stop the `deploy` task from running. This task  usually runs `git reset --hard HEAD` and will destroy your changes otherwise.
+If your local deployment directory is a symlink to your working directly, please set `local_config.deploy` to `False`. This will stop the `deploy` task from running. This task  usually runs `git reset --hard HEAD` and **will destroy your changes** otherwise.
 
 Usage
 --------------------------------
@@ -83,13 +87,35 @@ Deploys tag `1.0.1` to your staging environment.
     
 Deploys commit `82904baffde6ab7e62829514d662db463f7da6c4` to your local environment
     
-    fab local db_copy:staging
+    fab local db_copy:staging,options_table=yes
 
-Copies the database **to** your local environment **from** your staging environment.
+Copies the database, including the `wp_options` table, **to** your local environment **from** your staging environment.
 
     fab staging db_backup:my-backup
 
 Create a backup of the database on staging with the filename `my-backup`. This file will be ignored by `tidy_backups`.
+
+    cd wp
+    wp plugin update --all
+    cd ../
+    git add -A
+    git commit -m 'Updating plugins'
+    git push origin master
+    fab staging deploy:master
+    
+Deploying plugin updates with the [Wordpress Command-Line-Interface](http://wp-cli.org/). Note that WP-CLI onyl works in the wordpress submodule.
+
+    cd wp
+    git fetch --tags
+    git checkout 3.9
+    cd ../
+    git add wp
+    git commit -m 'Updating Wordpress to 3.9'
+    git push origin master
+    fab production deploy:master,submodules=yes
+    
+Deploying updates to Wordpress.
+    
 
 Troubleshooting
 --------------------------------

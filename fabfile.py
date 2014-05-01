@@ -71,7 +71,7 @@ def deploy(branch=None, tag=None, commit=None, submodules='no'):
         branch -- The branch to deploy (default None)
         tag -- The tag to deploy (default None)
         commit -- The commit hash to deploy (default None)
-        submodules -- If True, redeploy all submodules, otherwise ignore them. (default False)
+        submodules -- If 'yes', redeploy all submodules, otherwise ignore them. (default 'no')
         quiet -- If True, show verbose output, otherwise be quiet. (default True)"""
     if 'deploy' in env.target and env.target['deploy'] != True:
         puts("Value %s.deploy not set. Aborting." % env.target['wordpressConfig']['WP_STAGE'])
@@ -123,6 +123,10 @@ def db_update(source):
         env.target['wordpressConfig']['DB_USER'],
         env.target['wordpressConfig']['DB_PASSWORD'])
     with quiet():
+        run('%s -s%s -r%s' %
+            (cli_command,
+             source['wordpressConfig']['WP_SITEURL'],
+             env.target['wordpressConfig']['WP_SITEURL']))
         run('%s -s%s -r%s' %
             (cli_command,
              source['wordpressConfig']['WP_HOME'],
